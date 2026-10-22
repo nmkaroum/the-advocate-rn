@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth"><head><script data-bard-client-injected="true">(function(firebaseConfig, initialAuthToken, appId) {
+        window.__firebase_config = firebaseConfig;
+        window.__initial_auth_token = initialAuthToken;
+        window.__app_id = appId;
+            })("\n{\n  \"apiKey\": \"AIzaSyCqyCcs2R2e7AegGjvFAwG98wlamtbHvZY\",\n  \"authDomain\": \"bard-frontend.firebaseapp.com\",\n  \"projectId\": \"bard-frontend\",\n  \"storageBucket\": \"bard-frontend.firebasestorage.app\",\n  \"messagingSenderId\": \"175205271074\",\n  \"appId\": \"1:175205271074:web:2b7bd4d34d33bf38e6ec7b\"\n}\n","eyJhbGciOiJSUzI1NiIsImtpZCI6IjExNjRiNzdiNDMzZDdhMDAyMWI4NjE4YjhjYTU3ZTMyZGI5MWUxMTMiLCJ0eXAiOiJKV1QifQ.eyJzdWIiOiJmaXJlYmFzZS1hZG1pbnNkay1mYnN2Y0BiYXJkLWZyb250ZW5kLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwiYXVkIjoiaHR0cHM6Ly9pZGVudGl0eXRvb2xraXQuZ29vZ2xlYXBpcy5jb20vZ29vZ2xlLmlkZW50aXR5LmlkZW50aXR5dG9vbGtpdC52MS5JZGVudGl0eVRvb2xraXQiLCJ1aWQiOiIxNDYzNDE3OTQ0MjcxNzkxMjcyNyIsImlzcyI6ImZpcmViYXNlLWFkbWluc2RrLWZic3ZjQGJhcmQtZnJvbnRlbmQuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCJjbGFpbXMiOnsiYXBwSWQiOiJjXzc1NWM2MWU4MmFkY2MwMDJfaW5kZXguaHRtbC00NTEifSwiZXhwIjoxNzkyNjk0Njk5LCJpYXQiOjE3OTI2OTEwOTksImFsZyI6IlJTMjU2In0.l3-8xTsAy8loATFHa_cyEctzvDxTrMX8B9X9GLann2YdAfXRwY4gc06yvhdxgUCmghQKVjPuSZXl_c_HR9cIusiw9oFuD0MQb9geoYwD7znVm0ziQhBFkp1RmRx3IBcDLpAQj-N0u35hi7VujaqgF7oT0rvy1v_-ry-jtiVCn1wJXO0tGYYGs7jdBuH554X-KvJ-AqoFU_S4kBM9VcgnE6dbSH3lkSzncKB22Z-zZU_EMGRjR-NpkpWTZh8HrDLQYkzrEWq2EaVTzspegyhCkeceJ8ocQ5ugUwxo6ByVb50InBA18jNwFQxo9Y-nC16iN5JtLqh9LMOyqTeTo0EpIA","c_755c61e82adcc002_index.html-451")</script><script data-bard-client-injected="true">
+  document.addEventListener('input', (event) => {
+    if (event.target && (event.target.isContentEditable || event.target.hasAttribute('contenteditable'))) {
+      const clonedDoc = document.cloneNode(true);
+      const injectedScripts = clonedDoc.querySelectorAll('[data-bard-client-injected="true"]');
+      injectedScripts.forEach(el => el.remove());
+      window.parent.postMessage({
+        type: 'inlineEdit',
+        html: '<!DOCTYPE html>\n' + clonedDoc.documentElement.outerHTML
+      }, '*');
+    }
+  });
+</script><script data-bard-client-injected="true">(function(){'use strict';window.addEventListener("message",a=>{a.data&&a.data.type==="SUPPLEMENTAL_DATA_UPDATE"&&window.dispatchEvent(new CustomEvent("supplementaldataupdate",{detail:a.data.data}))});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const SCROLL_KEYS = new Set([
+    'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+    ' ', 'Spacebar', 'PageUp', 'PageDown', 'Home', 'End',
+  ]);
+  const HORIZONTAL_KEYS = new Set(['ArrowLeft', 'ArrowRight']);
+
+  function isTextEntryTarget(target) {
+    if (!target) return false;
+    const tagName = target.tagName;
+    return tagName === 'INPUT' || tagName === 'TEXTAREA' ||
+        tagName === 'SELECT' || target.isContentEditable === true;
+  }
+
+  // An element absorbs the key only if it both overflows on the axis being
+  // scrolled and is configured to scroll on that axis. The cheap dimension
+  // test runs first because getComputedStyle forces a style recalc, and this
+  // runs on every keypress. Each axis is read from its own longhand: the
+  // 'overflow' shorthand serializes as two values when the axes differ, which
+  // is the common 'overflow-x: hidden; overflow-y: auto' pane.
+  function canScroll(node, horizontal) {
+    const overflows = horizontal ? node.scrollWidth > node.clientWidth
+                                 : node.scrollHeight > node.clientHeight;
+    if (!overflows) return false;
+    const style = window.getComputedStyle(node);
+    const overflow = horizontal ? style.overflowX : style.overflowY;
+    return overflow === 'auto' || overflow === 'scroll';
+  }
+
+  // Walks up from the event target so nested scrollers keep their behavior.
+  // <body> is included because pages that pin the root height make it the
+  // scroll container.
+  function hasScrollableAncestor(target, horizontal) {
+    let node = target;
+    while (node && node !== document.documentElement) {
+      if (canScroll(node, horizontal)) return true;
+      node = node.parentElement;
+    }
+    return false;
+  }
+
+  function rootCanScroll(horizontal) {
+    const scroller = document.scrollingElement || document.documentElement;
+    if (!scroller) return false;
+    // Tolerate a pixel of rounding so subpixel layouts do not look scrollable.
+    return horizontal ? scroller.scrollWidth > window.innerWidth + 1
+                      : scroller.scrollHeight > window.innerHeight + 1;
+  }
+
+  window.addEventListener('keydown', function(event) {
+    if (!SCROLL_KEYS.has(event.key)) return;
+    if (event.defaultPrevented) return;
+    // Alt and Meta turn arrows into browser history navigation, and Ctrl is
+    // reserved for shortcuts, so none of them are scroll intent.
+    if (event.altKey || event.metaKey || event.ctrlKey) return;
+
+    const target = event.target;
+    if (isTextEntryTarget(target)) return;
+
+    // Anything that can still absorb the scroll gets to keep it.
+    const horizontal = HORIZONTAL_KEYS.has(event.key);
+    if (rootCanScroll(horizontal)) return;
+    if (hasScrollableAncestor(target, horizontal)) return;
+
+    event.preventDefault();
+  }, {capture: true, passive: false});
+})();</script><script data-bard-client-injected="true">(function() {
+  // Ensure this script is executed only once
+  if (window.firebaseAuthBridgeScriptLoaded) {
+    return;
+  }
+  window.firebaseAuthBridgeScriptLoaded = true;
+
+  let nextTokenPromiseId = 0;
+
+  // Stores { resolve, reject } for ongoing token requests
+  const pendingTokenPromises = {};
+
+  // Listen for messages from the Host Application
+  window.addEventListener('message', function(event) {
+
+    const messageData = event.data;
+
+  if (messageData && messageData.type === 'RESOLVE_NEW_FIREBASE_TOKEN') {
+      const { success, token, error, promiseId } = messageData ?? {};
+      if (pendingTokenPromises[promiseId]) {
+        if (success) {
+          pendingTokenPromises[promiseId].resolve(token);
+        } else {
+          pendingTokenPromises[promiseId].reject(new Error(error || 'Token refresh failed from host.'));
+        }
+        delete pendingTokenPromises[promiseId];
+      }
+    }
+  });
+
+  // Expose a function for the Generated App to request a new Firebase token
+  window.requestNewFirebaseToken = function() {
+    const currentPromiseId = nextTokenPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingTokenPromises[currentPromiseId] = { resolve, reject };
+    });
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'REQUEST_NEW_FIREBASE_TOKEN',
+        promiseId: currentPromiseId
+      }, '*');
+    } else {
+      pendingTokenPromises[currentPromiseId].reject(new Error('No parent window to request token from.'));
+      delete pendingTokenPromises[currentPromiseId];
+    }
+    return promise;
+  };
+})();</script><script data-bard-client-injected="true">
+let realOriginalGetUserMedia = null;
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  realOriginalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+}
+
+(function() {
+  if (navigator.mediaDevices && navigator.mediaDevices.__proto__) {
+    try {
+      Object.defineProperty(navigator.mediaDevices.__proto__, 'getUserMedia', {
+        get: function() {
+          return undefined; // Or throw an error
+        },
+        configurable: false
+      });
+    } catch (error) {
+      console.error("Error defining prototype getter:", error);
+    }
+  }
+})();
+
+(function() {
+  const pendingMediaResolvers = {};
+  let nextMediaPromiseId = 0;
+
+  function requestMediaPermissions(constraints) {
+    const mediaPromiseId = nextMediaPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingMediaResolvers[mediaPromiseId] = (granted) => {
+        delete pendingMediaResolvers[mediaPromiseId];
+        resolve(granted);
+      };
+    });
+
+    window.parent.postMessage({
+      type: 'requestMediaPermission',
+      constraints: constraints,
+      promiseId: mediaPromiseId,
+    }, '*');
+
+    return promise;
+  }
+
+  let originalGetUserMedia = realOriginalGetUserMedia;
+
+  function interceptGetUserMedia() {
+    if (navigator.mediaDevices) {
+      Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+        value: function(constraints) {
+          return requestMediaPermissions(constraints).then((granted) => {
+            if (granted) {
+              if (originalGetUserMedia) {
+                return originalGetUserMedia(constraints);
+              } else {
+                throw new Error("Original getUserMedia not available.");
+              }
+            } else {
+              throw new DOMException('Permission denied', 'NotAllowedError');
+            }
+          });
+        },
+        writable: false,
+        configurable: false
+      });
+    }
+  }
+
+  interceptGetUserMedia();
+
+  const observer = new MutationObserver(function(mutationsList, observer) {
+    for (const mutation of mutationsList) {
+      if (mutation.type === 'reconfigured' && mutation.name === 'getUserMedia' && mutation.object === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'attributes' && mutation.attributeName === 'getUserMedia' && mutation.target === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'childList' && mutation.addedNodes) {
+        mutation.addedNodes.forEach(node => {
+          if (node === navigator.mediaDevices) {
+            interceptGetUserMedia();
+          }
+        });
+      }
+    }
+  });
+
+  function interceptSpeechRecognition() {
+    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+      return;
+    }
+
+    const OriginalSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const SpeechRecognitionWrapper = function(...args) {
+      const recognizer = new OriginalSpeechRecognition(...args);
+      const originalStart = recognizer.start.bind(recognizer);
+
+      recognizer.start = function() {
+        requestMediaPermissions({ audio: true }).then(granted => {
+          if (granted) {
+            originalStart();
+          } else {
+            const errorEvent = new SpeechRecognitionErrorEvent('error');
+            errorEvent.error = 'not-allowed'; // This is the standard error for permission denial.
+            recognizer.dispatchEvent(errorEvent);
+          }
+        });
+      };
+
+      return recognizer;
+    };
+
+    SpeechRecognitionWrapper.prototype = OriginalSpeechRecognition.prototype;
+    SpeechRecognitionWrapper.prototype.constructor = SpeechRecognitionWrapper;
+
+    if (window.SpeechRecognition) {
+      window.SpeechRecognition = SpeechRecognitionWrapper;
+    }
+    if (window.webkitSpeechRecognition) {
+      window.webkitSpeechRecognition = SpeechRecognitionWrapper;
+    }
+  }
+
+  interceptSpeechRecognition();
+
+  window.addEventListener('message', function(event) {
+    if (event.data) {
+      if (event.data.type === 'resolveMediaPermission') {
+        const { promiseId, granted } = event.data;
+        if (pendingMediaResolvers[promiseId]) {
+          pendingMediaResolvers[promiseId](granted);
+        }
+      }
+    }
+  });
+
+})();</script><script ws-interception-config="{&quot;parentOrigin&quot;:&quot;https://gemini.google.com&quot;,&quot;proxiedDomains&quot;:[]}" data-bard-client-injected="true">(function(){'use strict';var u=typeof Object.defineProperties=="function"?Object.defineProperty:function(b,d,e){if(b==Array.prototype||b==Object.prototype)return b;b[d]=e.value;return b};function v(b){b=["object"==typeof globalThis&&globalThis,b,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var d=0;d<b.length;++d){var e=b[d];if(e&&e.Math==Math)return e}throw Error("Cannot find global object");}var w=v(this);
+function y(b,d){if(d)a:{var e=w;b=b.split(".");for(var h=0;h<b.length-1;h++){var k=b[h];if(!(k in e))break a;e=e[k]}b=b[b.length-1];h=e[b];d=d(h);d!=h&&d!=null&&u(e,b,{configurable:!0,writable:!0,value:d})}}function z(b){function d(h){return b.next(h)}function e(h){return b.throw(h)}return new Promise(function(h,k){function m(n){n.done?h(n.value):Promise.resolve(n.value).then(d,e).then(m,k)}m(b.next())})}y("globalThis",function(b){return b||w});/*
+
+ Copyright The Closure Library Authors.
+ SPDX-License-Identifier: Apache-2.0
+*/
+function A(b,d){function e(){}e.prototype=d.prototype;b.j=d.prototype;b.prototype=new e;b.prototype.constructor=b;b.h=function(h,k,m){for(var n=Array(arguments.length-2),p=2;p<arguments.length;p++)n[p-2]=arguments[p];return d.prototype[k].apply(h,n)}};function B(b,d,e="*"){function h(a){if(typeof a==="string")return F.encode(a).buffer;if(a instanceof ArrayBuffer)return a.slice(0);if(ArrayBuffer.isView(a))return a.buffer.slice(a.byteOffset,a.byteOffset+a.byteLength);throw Error("Invalid data type");}function k(a){a=h(a);var f={type:"send",data:new Uint8Array(a)},g;(g=r)==null||g.postMessage(f,[a])}function m(){if(!r)throw Error("Data port not captured yet.");r.onmessage=a=>{if(a.data.type==="message"){a=new MessageEvent("message",{data:G.decode(a.data.data)});
+let f;(f=c.onmessage)==null||f.call(c,a);c.dispatchEvent(a)}}}function n(){if(!t)throw Error("Control port not captured yet.");t.onmessage=a=>{switch(a.data.type){case "open":l=1;var f=new Event("open"),g;(g=c.onopen)==null||g.call(c,f);c.dispatchEvent(f);q.forEach(H=>{k(H)});q=[];break;case "close":g=a.data;l=3;g=new CloseEvent("close",{code:g.code,reason:g.reason,wasClean:g.wasClean});(f=c.onclose)==null||f.call(c,g);c.dispatchEvent(g);break;case "error":l=3;f=new Event("error");let x;(x=c.onerror)==
+null||x.call(c,f);c.dispatchEvent(f)}}}function p(a){return z(function*(){var f=new MessageChannel;t=f.port1;var g=new MessageChannel;r=g.port1;n();m();window.parent.postMessage({type:"websocket_open",portOrdering:["control","data"],url:b,protocols:a||[],connectionId:I},e,[f.port2,g.port2])}())}var c=Reflect.construct(EventTarget,[],new.target);c.CONNECTING=0;c.OPEN=1;c.CLOSING=2;c.CLOSED=3;c.url=b;c.binaryType="arraybuffer";c.protocol="";c.i="";var l=0,t=null,r=null,q=[],F=new TextEncoder,G=new TextDecoder;
+c.onopen=null;c.onmessage=null;c.onclose=null;c.onerror=null;Object.defineProperty(c,"readyState",{get:()=>l,enumerable:!0,configurable:!0});Object.defineProperty(c,"bufferedAmount",{get:()=>{var a=0;q.forEach(f=>{a+=typeof f==="string"?f.length:f.byteLength});return a},enumerable:!0,configurable:!0});var I=function(){var a;return((a=globalThis.crypto)==null?0:a.randomUUID)?globalThis.crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,f=>{var g=Math.random()*16|0;return(f===
+"x"?g:g&3|8).toString(16)})}();c.send=a=>{if(l===1)a instanceof Blob?a.arrayBuffer().then(f=>{k(f)}):k(a);else if(l===0)if(typeof a==="string")q.push(a);else if(a instanceof ArrayBuffer||ArrayBuffer.isView(a))q.push(h(a));else throw Error("Sending Blob is not supported before the connection is open.");else console.debug("WebSocket send called in CLOSING or CLOSED state; ignored.")};c.close=(a=1E3,f="")=>{if(l!==2&&l!==3){l=2;a={type:"close",code:a,reason:f,wasClean:a===1E3};var g;(g=t)==null||g.postMessage(a)}};
+Promise.resolve().then(()=>p(d));return c}A(B,EventTarget);var C=document.currentScript,D=C==null?void 0:C.getAttribute("ws-interception-config");if(!D)throw Error("WebSocket Interceptor: Missing ws-interception-config attribute in the script tag.");var E=JSON.parse(D);if(!E.parentOrigin||typeof E.parentOrigin!=="string")throw Error("WebSocket Interceptor: Invalid parentOrigin in ws-interception-config");
+(function(b){var d=Object.getOwnPropertyDescriptor(window,"WebSocket");if(!d||d.writable||d.configurable)d=Object.assign(function(e,h){try{let k=(new URL(e)).hostname;if(b.proxiedDomains.some(m=>k===m||k.endsWith(`.${m}`)))return new B(e,h,b.parentOrigin)}catch(k){throw window.parent.postMessage({type:"websocket_blocked",url:e,reason:"blocked_invalid_url"},b.parentOrigin),new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");}window.parent.postMessage({type:"websocket_blocked",
+url:e,reason:"blocked_domain_not_allowlisted"},b.parentOrigin);throw new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");},{CONNECTING:0,OPEN:1,CLOSING:2,CLOSED:3}),Object.defineProperty(window,"WebSocket",{value:d,writable:!1,configurable:!1})})({proxiedDomains:E.proxiedDomains||[],parentOrigin:E.parentOrigin});}).call(this);
+</script><script data-bard-client-injected="true">((function(modelInformation) {
+  const originalFetch = window.fetch;
+  // TODO: b/421908508 - Move these out of the script and match all generative AI model calls.
+  let googleLlmBaseApiUrls = [
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':streamGenerateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageEditModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageTransformModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.ttsModelName + ':generateContent',
+  ];
+  modelInformation.deprecatedTextModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+    );
+  });
+  modelInformation.deprecatedImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predict',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predictLongRunning',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedGenerateImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedImageTransformModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+
+  const pendingFetchResolvers = {};
+  let nextPromiseId = 0;
+
+  function handleStringInput(input, optionsArgument) {
+    const actualUrl = input;
+    const fetchCallArgs = [actualUrl, optionsArgument];
+    const effectiveOptions = optionsArgument || {};
+    const bodyForApiKeyCheck = effectiveOptions.body;
+    const bodyForPostMessage = effectiveOptions.body;
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  function handleRequestInput(input, optionsArgument) {
+    const actualUrl = input.url;
+    const fetchCallArgs = [input, optionsArgument];
+    const effectiveOptions = { method: input.method, headers: new Headers(input.headers) };
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (optionsArgument) {
+      if (optionsArgument.method) effectiveOptions.method = optionsArgument.method;
+      if (optionsArgument.headers) effectiveOptions.headers = new Headers(optionsArgument.headers);
+      if ('body' in optionsArgument) {
+        bodyForApiKeyCheck = optionsArgument.body;
+        bodyForPostMessage = optionsArgument.body;
+      } else {
+        bodyForApiKeyCheck = undefined;
+        bodyForPostMessage = input.body;
+      }
+    } else {
+      bodyForApiKeyCheck = undefined;
+      bodyForPostMessage = input.body;
+    }
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  window.fetch = function(input, optionsArgument) {
+    let actualUrl;
+    let fetchCallArgs;
+    let effectiveOptions = {};
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (typeof input === 'string') {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleStringInput(input, optionsArgument));
+    } else if (input instanceof Request) {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleRequestInput(input, optionsArgument));
+    } else {
+      return originalFetch.apply(window, [input, optionsArgument]);
+    }
+
+    effectiveOptions.method = effectiveOptions.method || 'GET';
+    if (!effectiveOptions.headers) {
+      effectiveOptions.headers = new Headers();
+    }
+
+
+    if (typeof actualUrl === 'string' && googleLlmBaseApiUrls.some((url) => actualUrl.startsWith(url))) {
+      let apiKeyIsNull = true;
+
+      const regex = new RegExp("models/([^:]+)");
+      const modelNameMatch = actualUrl.match(regex);
+      const modelName = modelNameMatch ? modelNameMatch[1] : 'unspecified';
+
+
+      try {
+        const urlObject = new URL(actualUrl);  // Use URL object for robust parsing
+        const apiKeyParam = urlObject.searchParams.get('key');
+        if (apiKeyParam) {
+          apiKeyIsNull = false;
+        }
+      } catch (e) {
+        // Continue checks even if URL parsing fails
+      }
+
+      if (apiKeyIsNull && effectiveOptions.headers) {
+        const h = new Headers(effectiveOptions.headers);
+        const apiKeyHeaderValue = h.get('X-API-Key') || h.get('x-api-key');
+        if (apiKeyHeaderValue) {
+          apiKeyIsNull = false;
+          return originalFetch.apply(window, fetchCallArgs);
+        }
+      }
+
+      if (apiKeyIsNull && effectiveOptions.method && ['POST', 'PUT', 'PATCH'].includes(effectiveOptions.method.toUpperCase()) && typeof bodyForApiKeyCheck === 'string') {
+        try {
+          const bodyData = JSON.parse(bodyForApiKeyCheck);
+          if (bodyData && bodyData.apiKey) {
+            apiKeyIsNull = false;
+            return originalFetch.apply(window, fetchCallArgs);
+          }
+        } catch (e) {
+          // Ignore JSON parsing errors
+        }
+      }
+
+      if(apiKeyIsNull) {
+        const promiseId = nextPromiseId++;
+        const promise = new Promise((resolve) => {
+          pendingFetchResolvers[promiseId] = (resolvedResponse) => {
+            delete pendingFetchResolvers[promiseId];
+            resolve(resolvedResponse);
+          };
+        });
+
+        let serializedBodyForPostMessage;
+        if (typeof bodyForPostMessage === 'string' || bodyForPostMessage == null) {
+            serializedBodyForPostMessage = bodyForPostMessage;
+        } else if (bodyForPostMessage instanceof ReadableStream) {
+            serializedBodyForPostMessage = null;
+        } else {
+            try {
+                serializedBodyForPostMessage = JSON.stringify(bodyForPostMessage);
+            } catch (e) {
+                serializedBodyForPostMessage = null;
+            }
+        }
+
+        const messageOptions = {
+            method: effectiveOptions.method,
+            headers: Object.fromEntries(new Headers(effectiveOptions.headers).entries()),
+            body: serializedBodyForPostMessage
+        };
+
+        window.parent.postMessage({
+          type: 'requestFetch',
+          url: actualUrl,
+          modelName: modelName,
+          options: messageOptions,
+          promiseId: promiseId,
+        }, '*');
+
+        return promise;
+      }
+      return originalFetch.apply(window, fetchCallArgs);
+    }
+    return originalFetch.apply(window, fetchCallArgs);
+  };
+
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'resolveFetch') {
+      const { promiseId, response } = event.data;
+      if (pendingFetchResolvers[promiseId]) {
+        try {
+          const reconstructedResponse = new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: new Headers(response.headers),
+          });
+          pendingFetchResolvers[promiseId](reconstructedResponse);
+        } catch (error) {
+          pendingFetchResolvers[promiseId](new Response(null, { status: 500, statusText: "Interceptor Response Reconstruction Error" }));
+        }
+      }
+    }
+  });
+
+}))({"textModelName":"gemini-3-flash-preview","imageModelName":"imagen-4.0-generate-001","imageEditModelName":"gemini-3.1-flash-image","imageTransformModelName":"gemini-3-pro-image","videoModelName":"veo-2.0-generate-001","ttsModelName":"gemini-2.5-flash-preview-tts","deprecatedTextModelNames":["gemini-2.0-flash","gemini-2.5-flash","gemini-2.5-flash-preview-04-17","gemini-2.5-flash-preview-05-20","gemini-2.5-flash-preview-09-2025"],"deprecatedImageModelNames":["imagen-3.0-generate-001","imagen-3.0-generate-002"],"deprecatedGenerateImageModelNames":["gemini-2.5-flash-image-preview","gemini-2.5-flash-image","gemini-3.1-flash-image-preview"],"deprecatedImageTransformModelNames":["gemini-3-pro-image-preview-11-2025"]})</script><script data-bard-client-injected="true">(function(){'use strict';function a(){window.parent.postMessage({type:"interaction"},"*")}window.addEventListener("click",a,{capture:!0,passive:!0});window.addEventListener("touchstart",a,{capture:!0,passive:!0});window.addEventListener("keydown",a,{capture:!0,passive:!0});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const originalConsoleLog = console.log;
+  const originalConsoleError = console.error;
+
+    /**
+   * Normalizes an error event or a promise rejection reason into a structured error object.
+   * @param {*} errorEventOrReason The error object or reason.
+   * @return {object} Structured error data { message, name, stack }.
+   */
+  function getErrorObject(errorEventOrReason) {
+    if (errorEventOrReason instanceof Error) {
+      return {
+        message: errorEventOrReason.message,
+        name: errorEventOrReason.name,
+        stack: errorEventOrReason.stack,
+      };
+    }
+    // Fallback for non-Error objects.
+    try {
+      return {
+        message: JSON.stringify(errorEventOrReason),
+        name: 'UnknownErrorType',
+        stack: null,
+      };
+    } catch (e) {
+      return {
+        message: String(errorEventOrReason),
+        name: 'UnknownErrorTypeNonStringifiable',
+        stack: null,
+      };
+    }
+  }
+
+  /**
+   * Converts an array of arguments (from log/error) into a single string.
+   * Handles Error objects specially to include their message and stack.
+   * @param {Array<*>} args - Arguments passed to console methods.
+   * @return {string} A string representation of the arguments.
+   */
+  function stringifyArgs(args) {
+    return args
+      .map((arg) => {
+        if (arg instanceof Error) {
+          const {message, stack} = arg;
+          return `Error: ${message}${stack ? ('\nStack: ' + stack) : ''}`;
+        }
+        if (typeof arg === 'object' && arg !== null) {
+          try {
+            return JSON.stringify(arg);
+          } catch (error) {
+            return '[Circular Object]';
+          }
+        } else {
+          return String(arg);
+        }
+      })
+      .join(' ');
+  }
+
+  console.log = function(...args) {
+    const logString = stringifyArgs(args);
+    window.parent.postMessage({ type: 'log', message: logString }, '*');
+    originalConsoleLog.apply(console, args);
+  };
+
+  console.error = function(...args) {
+    let errorData;
+    if (args.length > 0 && args[0] instanceof Error) {
+      const err = args[0];
+      // If the first arg is an Error, capture its details.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        ...getErrorObject(err),
+        rawArgsString: stringifyArgs(args.slice(1)),
+        timestamp: new Date().toISOString(),
+      };
+    } else {
+      // If not an Error object, treat all args as a general error message.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        message: stringifyArgs(args),
+        name: 'ConsoleLoggedError',
+        stack: null,
+        timestamp: new Date().toISOString(),
+      };
+    }
+    window.parent.postMessage(errorData, '*');
+    originalConsoleError.apply(console, args);
+  };
+
+  // Listen for global unhandled synchronous errors.
+  window.addEventListener('error', function(event) {
+    const errorDetails = event.error ? getErrorObject(event.error) : {
+      message: event.message,
+      name: 'GlobalError',
+      stack: null,
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+    };
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'global',
+      ...errorDetails,
+      message: errorDetails.message || event.message,
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+  // Listen for unhandled promise rejections (asynchronous errors).
+  window.addEventListener('unhandledrejection', function(event) {
+    const errorDetails = getErrorObject(event.reason);
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'unhandledrejection',
+      ...errorDetails,
+      message: errorDetails.message || 'Unhandled Promise Rejection',
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+})();</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Advocate RN | Michigan Registered Nurse Patient &amp; Family Advocacy</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Plus Jakarta Sans & Inter for a clean, modern healthcare portal aesthetic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#241468',
+                            mid: '#5b2896',
+                            light: '#7e30b5',
+                            tint: '#f6f3fa',
+                            accent: '#e07a2e'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Dynamic CSS variables controlled by the Live Visual Customizer */
+        :root {
+            --hero-grad-start: #241468;
+            --hero-grad-mid: #5b2896;
+            --hero-grad-end: #7e30b5;
+            --hero-top-border: #d97724;
+            --brand-purple: #5b2896;
+        }
+
+        .hero-banner-gradient {
+            background: linear-gradient(100deg, var(--hero-grad-start) 0%, var(--hero-grad-mid) 52%, var(--hero-grad-end) 100%);
+            border-top: 4px solid var(--hero-top-border);
+        }
+
+        .brand-text-purple {
+            color: var(--brand-purple) !important;
+        }
+
+        .brand-bg-purple {
+            background-color: var(--brand-purple) !important;
+        }
+
+        .brand-border-purple {
+            border-color: var(--brand-purple) !important;
+        }
+
+        /* Visual indication when Live Edit Mode is active */
+        body.live-edit-active [data-editable="true"] {
+            outline: 2px dashed rgba(126, 48, 181, 0.45);
+            outline-offset: 4px;
+            border-radius: 4px;
+            cursor: text;
+            transition: all 0.15s ease;
+        }
+
+        body.live-edit-active [data-editable="true"]:hover,
+        body.live-edit-active [data-editable="true"]:focus {
+            outline: 2px solid #7e30b5;
+            background-color: rgba(126, 48, 181, 0.06);
+        }
+
+        /* Dark hero text highlight in edit mode */
+        body.live-edit-active .hero-banner-gradient [data-editable="true"]:hover,
+        body.live-edit-active .hero-banner-gradient [data-editable="true"]:focus {
+            outline: 2px solid #fbbf24;
+            background-color: rgba(255, 255, 255, 0.12);
+        }
+    </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:Inter, sans-serif;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.sticky{position:sticky}.inset-0{inset:0px}.-top-3{top:-0.75rem}.bottom-5{bottom:1.25rem}.right-5{right:1.25rem}.top-0{top:0px}.z-10{z-index:10}.z-20{z-index:20}.z-30{z-index:30}.z-50{z-index:50}.mx-auto{margin-left:auto;margin-right:auto}.my-4{margin-top:1rem;margin-bottom:1rem}.-mb-14{margin-bottom:-3.5rem}.-mt-12{margin-top:-3rem}.mb-1{margin-bottom:0.25rem}.mb-10{margin-bottom:2.5rem}.mb-12{margin-bottom:3rem}.mb-16{margin-bottom:4rem}.mb-2{margin-bottom:0.5rem}.mb-3{margin-bottom:0.75rem}.mb-4{margin-bottom:1rem}.mb-5{margin-bottom:1.25rem}.mb-6{margin-bottom:1.5rem}.ml-auto{margin-left:auto}.mt-0\.5{margin-top:0.125rem}.mt-1{margin-top:0.25rem}.mt-1\.5{margin-top:0.375rem}.mt-2{margin-top:0.5rem}.mt-4{margin-top:1rem}.mt-6{margin-top:1.5rem}.block{display:block}.inline-block{display:inline-block}.flex{display:flex}.grid{display:grid}.hidden{display:none}.h-10{height:2.5rem}.h-11{height:2.75rem}.h-20{height:5rem}.h-3\.5{height:0.875rem}.h-4{height:1rem}.h-5{height:1.25rem}.h-6{height:1.5rem}.h-72{height:18rem}.h-8{height:2rem}.h-9{height:2.25rem}.h-\[1px\]{height:1px}.max-h-\[75vh\]{max-height:75vh}.w-10{width:2.5rem}.w-11{width:2.75rem}.w-3\.5{width:0.875rem}.w-4{width:1rem}.w-48{width:12rem}.w-5{width:1.25rem}.w-6{width:1.5rem}.w-60{width:15rem}.w-8{width:2rem}.w-80{width:20rem}.w-9{width:2.25rem}.w-\[1px\]{width:1px}.w-full{width:100%}.max-w-2xl{max-width:42rem}.max-w-3xl{max-width:48rem}.max-w-5xl{max-width:64rem}.max-w-6xl{max-width:72rem}.max-w-7xl{max-width:80rem}.max-w-lg{max-width:32rem}.max-w-xl{max-width:36rem}.shrink-0{flex-shrink:0}.cursor-pointer{cursor:pointer}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-start{align-items:flex-start}.items-end{align-items:flex-end}.items-center{align-items:center}.items-baseline{align-items:baseline}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:0.25rem}.gap-1\.5{gap:0.375rem}.gap-2{gap:0.5rem}.gap-2\.5{gap:0.625rem}.gap-3{gap:0.75rem}.gap-3\.5{gap:0.875rem}.gap-4{gap:1rem}.gap-5{gap:1.25rem}.gap-6{gap:1.5rem}.gap-8{gap:2rem}.space-x-2 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.5rem * var(--tw-space-x-reverse));margin-left:calc(0.5rem * calc(1 - var(--tw-space-x-reverse)))}.space-x-2\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.625rem * var(--tw-space-x-reverse));margin-left:calc(0.625rem * calc(1 - var(--tw-space-x-reverse)))}.space-x-3 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.75rem * var(--tw-space-x-reverse));margin-left:calc(0.75rem * calc(1 - var(--tw-space-x-reverse)))}.space-x-6 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(1.5rem * var(--tw-space-x-reverse));margin-left:calc(1.5rem * calc(1 - var(--tw-space-x-reverse)))}.space-y-1 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.25rem * var(--tw-space-y-reverse))}.space-y-1\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.375rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.375rem * var(--tw-space-y-reverse))}.space-y-2 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.5rem * var(--tw-space-y-reverse))}.space-y-2\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.625rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.625rem * var(--tw-space-y-reverse))}.space-y-3 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}.space-y-3\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.875rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.875rem * var(--tw-space-y-reverse))}.space-y-5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.25rem * var(--tw-space-y-reverse))}.divide-gray-200 > :not([hidden]) ~ :not([hidden]){--tw-divide-opacity:1;border-color:rgb(229 231 235 / var(--tw-divide-opacity, 1))}.overflow-hidden{overflow:hidden}.overflow-y-auto{overflow-y:auto}.scroll-smooth{scroll-behavior:smooth}.rounded{border-radius:0.25rem}.rounded-2xl{border-radius:1rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.rounded-md{border-radius:0.375rem}.rounded-xl{border-radius:0.75rem}.rounded-t-2xl{border-top-left-radius:1rem;border-top-right-radius:1rem}.border{border-width:1px}.border-2{border-width:2px}.border-4{border-width:4px}.border-y{border-top-width:1px;border-bottom-width:1px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-amber-200{--tw-border-opacity:1;border-color:rgb(253 230 138 / var(--tw-border-opacity, 1))}.border-brand-mid{--tw-border-opacity:1;border-color:rgb(91 40 150 / var(--tw-border-opacity, 1))}.border-emerald-200{--tw-border-opacity:1;border-color:rgb(167 243 208 / var(--tw-border-opacity, 1))}.border-gray-100{--tw-border-opacity:1;border-color:rgb(243 244 246 / var(--tw-border-opacity, 1))}.border-gray-100\/80{border-color:rgb(243 244 246 / 0.8)}.border-gray-200{--tw-border-opacity:1;border-color:rgb(229 231 235 / var(--tw-border-opacity, 1))}.border-gray-200\/80{border-color:rgb(229 231 235 / 0.8)}.border-gray-200\/90{border-color:rgb(229 231 235 / 0.9)}.border-gray-300{--tw-border-opacity:1;border-color:rgb(209 213 219 / var(--tw-border-opacity, 1))}.border-purple-100{--tw-border-opacity:1;border-color:rgb(243 232 255 / var(--tw-border-opacity, 1))}.border-purple-200{--tw-border-opacity:1;border-color:rgb(233 213 255 / var(--tw-border-opacity, 1))}.border-purple-200\/80{border-color:rgb(233 213 255 / 0.8)}.border-purple-400\/40{border-color:rgb(192 132 252 / 0.4)}.border-slate-300{--tw-border-opacity:1;border-color:rgb(203 213 225 / var(--tw-border-opacity, 1))}.border-slate-800{--tw-border-opacity:1;border-color:rgb(30 41 59 / var(--tw-border-opacity, 1))}.border-white\/15{border-color:rgb(255 255 255 / 0.15)}.border-white\/30{border-color:rgb(255 255 255 / 0.3)}.bg-\[\#f6f3fa\]{--tw-bg-opacity:1;background-color:rgb(246 243 250 / var(--tw-bg-opacity, 1))}.bg-\[\#f9f8fc\]{--tw-bg-opacity:1;background-color:rgb(249 248 252 / var(--tw-bg-opacity, 1))}.bg-\[\#fafafa\]{--tw-bg-opacity:1;background-color:rgb(250 250 250 / var(--tw-bg-opacity, 1))}.bg-amber-50\/70{background-color:rgb(255 251 235 / 0.7)}.bg-emerald-50\/70{background-color:rgb(236 253 245 / 0.7)}.bg-emerald-600{--tw-bg-opacity:1;background-color:rgb(5 150 105 / var(--tw-bg-opacity, 1))}.bg-gray-100{--tw-bg-opacity:1;background-color:rgb(243 244 246 / var(--tw-bg-opacity, 1))}.bg-gray-200{--tw-bg-opacity:1;background-color:rgb(229 231 235 / var(--tw-bg-opacity, 1))}.bg-gray-200\/80{background-color:rgb(229 231 235 / 0.8)}.bg-gray-300{--tw-bg-opacity:1;background-color:rgb(209 213 219 / var(--tw-bg-opacity, 1))}.bg-gray-50{--tw-bg-opacity:1;background-color:rgb(249 250 251 / var(--tw-bg-opacity, 1))}.bg-purple-200\/70{background-color:rgb(233 213 255 / 0.7)}.bg-purple-50{--tw-bg-opacity:1;background-color:rgb(250 245 255 / var(--tw-bg-opacity, 1))}.bg-purple-50\/50{background-color:rgb(250 245 255 / 0.5)}.bg-purple-900\/40{background-color:rgb(88 28 135 / 0.4)}.bg-slate-900{--tw-bg-opacity:1;background-color:rgb(15 23 42 / var(--tw-bg-opacity, 1))}.bg-slate-900\/60{background-color:rgb(15 23 42 / 0.6)}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-white\/15{background-color:rgb(255 255 255 / 0.15)}.bg-white\/35{background-color:rgb(255 255 255 / 0.35)}.bg-white\/95{background-color:rgb(255 255 255 / 0.95)}.bg-gradient-to-br{background-image:linear-gradient(to bottom right, var(--tw-gradient-stops))}.from-amber-50{--tw-gradient-from:#fffbeb var(--tw-gradient-from-position);--tw-gradient-to:rgb(255 251 235 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.to-purple-50{--tw-gradient-to:#faf5ff var(--tw-gradient-to-position)}.object-cover{object-fit:cover}.object-top{object-position:top}.p-1{padding:0.25rem}.p-1\.5{padding:0.375rem}.p-2{padding:0.5rem}.p-3{padding:0.75rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.p-6{padding:1.5rem}.px-0{padding-left:0px;padding-right:0px}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-4{padding-left:1rem;padding-right:1rem}.px-5{padding-left:1.25rem;padding-right:1.25rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-12{padding-top:3rem;padding-bottom:3rem}.py-16{padding-top:4rem;padding-bottom:4rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.py-4{padding-top:1rem;padding-bottom:1rem}.pb-12{padding-bottom:3rem}.pb-16{padding-bottom:4rem}.pb-20{padding-bottom:5rem}.pb-4{padding-bottom:1rem}.pb-8{padding-bottom:2rem}.pt-10{padding-top:2.5rem}.pt-12{padding-top:3rem}.pt-16{padding-top:4rem}.pt-2{padding-top:0.5rem}.pt-3{padding-top:0.75rem}.pt-4{padding-top:1rem}.pt-6{padding-top:1.5rem}.text-center{text-align:center}.font-heading{font-family:Plus Jakarta Sans, sans-serif}.font-sans{font-family:Inter, sans-serif}.text-2xl{font-size:1.5rem;line-height:2rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-\[10px\]{font-size:10px}.text-\[11px\]{font-size:11px}.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.font-medium{font-weight:500}.font-normal{font-weight:400}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.leading-relaxed{line-height:1.625}.leading-snug{line-height:1.375}.leading-tight{line-height:1.25}.tracking-tight{letter-spacing:-0.025em}.tracking-wider{letter-spacing:0.05em}.text-amber-950{--tw-text-opacity:1;color:rgb(69 26 3 / var(--tw-text-opacity, 1))}.text-brand-dark{--tw-text-opacity:1;color:rgb(36 20 104 / var(--tw-text-opacity, 1))}.text-emerald-700{--tw-text-opacity:1;color:rgb(4 120 87 / var(--tw-text-opacity, 1))}.text-emerald-950{--tw-text-opacity:1;color:rgb(2 44 34 / var(--tw-text-opacity, 1))}.text-gray-300{--tw-text-opacity:1;color:rgb(209 213 219 / var(--tw-text-opacity, 1))}.text-purple-100{--tw-text-opacity:1;color:rgb(243 232 255 / var(--tw-text-opacity, 1))}.text-purple-200{--tw-text-opacity:1;color:rgb(233 213 255 / var(--tw-text-opacity, 1))}.text-purple-50{--tw-text-opacity:1;color:rgb(250 245 255 / var(--tw-text-opacity, 1))}.text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}.text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139 / var(--tw-text-opacity, 1))}.text-slate-600{--tw-text-opacity:1;color:rgb(71 85 105 / var(--tw-text-opacity, 1))}.text-slate-700{--tw-text-opacity:1;color:rgb(51 65 85 / var(--tw-text-opacity, 1))}.text-slate-800{--tw-text-opacity:1;color:rgb(30 41 59 / var(--tw-text-opacity, 1))}.text-slate-900{--tw-text-opacity:1;color:rgb(15 23 42 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-white\/80{color:rgb(255 255 255 / 0.8)}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.accent-brand-mid{accent-color:#5b2896}.shadow{--tw-shadow:0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-\[0_8px_30px_rgb\(0\2c 0\2c 0\2c 0\.08\)\]{--tw-shadow:0 8px 30px rgb(0,0,0,0.08);--tw-shadow-colored:0 8px 30px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-sm{--tw-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-xl{--tw-shadow:0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.backdrop-blur-md{--tw-backdrop-blur:blur(12px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.backdrop-blur-sm{--tw-backdrop-blur:blur(4px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-colors{transition-property:color, background-color, border-color, fill, stroke, -webkit-text-decoration-color;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, -webkit-text-decoration-color;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-opacity{transition-property:opacity;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-shadow{transition-property:box-shadow;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-transform{transition-property:transform;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.selection\:bg-purple-200 *::selection{--tw-bg-opacity:1;background-color:rgb(233 213 255 / var(--tw-bg-opacity, 1))}.selection\:text-purple-900 *::selection{--tw-text-opacity:1;color:rgb(88 28 135 / var(--tw-text-opacity, 1))}.selection\:bg-purple-200::selection{--tw-bg-opacity:1;background-color:rgb(233 213 255 / var(--tw-bg-opacity, 1))}.selection\:text-purple-900::selection{--tw-text-opacity:1;color:rgb(88 28 135 / var(--tw-text-opacity, 1))}.hover\:scale-105:hover{--tw-scale-x:1.05;--tw-scale-y:1.05;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.hover\:border-brand-mid:hover{--tw-border-opacity:1;border-color:rgb(91 40 150 / var(--tw-border-opacity, 1))}.hover\:bg-emerald-700:hover{--tw-bg-opacity:1;background-color:rgb(4 120 87 / var(--tw-bg-opacity, 1))}.hover\:bg-gray-100:hover{--tw-bg-opacity:1;background-color:rgb(243 244 246 / var(--tw-bg-opacity, 1))}.hover\:bg-gray-200:hover{--tw-bg-opacity:1;background-color:rgb(229 231 235 / var(--tw-bg-opacity, 1))}.hover\:bg-purple-50:hover{--tw-bg-opacity:1;background-color:rgb(250 245 255 / var(--tw-bg-opacity, 1))}.hover\:bg-purple-900\/60:hover{background-color:rgb(88 28 135 / 0.6)}.hover\:bg-slate-800:hover{--tw-bg-opacity:1;background-color:rgb(30 41 59 / var(--tw-bg-opacity, 1))}.hover\:text-brand-mid:hover{--tw-text-opacity:1;color:rgb(91 40 150 / var(--tw-text-opacity, 1))}.hover\:text-white:hover{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.hover\:underline:hover{-webkit-text-decoration-line:underline;text-decoration-line:underline}.hover\:opacity-80:hover{opacity:0.8}.hover\:opacity-90:hover{opacity:0.9}.hover\:opacity-95:hover{opacity:0.95}.hover\:shadow-md:hover{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.group:hover .group-hover\:bg-brand-mid{--tw-bg-opacity:1;background-color:rgb(91 40 150 / var(--tw-bg-opacity, 1))}.group:hover .group-hover\:text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.group:hover .group-hover\:underline{-webkit-text-decoration-line:underline;text-decoration-line:underline}@media (min-width: 640px){.sm\:-mt-14{margin-top:-3.5rem}.sm\:h-80{height:20rem}.sm\:w-72{width:18rem}.sm\:w-96{width:24rem}.sm\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.sm\:flex-row{flex-direction:row}.sm\:gap-0{gap:0px}.sm\:space-x-5 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(1.25rem * var(--tw-space-x-reverse));margin-left:calc(1.25rem * calc(1 - var(--tw-space-x-reverse)))}.sm\:divide-x > :not([hidden]) ~ :not([hidden]){--tw-divide-x-reverse:0;border-right-width:calc(1px * var(--tw-divide-x-reverse));border-left-width:calc(1px * calc(1 - var(--tw-divide-x-reverse)))}.sm\:rounded-sm{border-radius:0.125rem}.sm\:p-8{padding:2rem}.sm\:px-12{padding-left:3rem;padding-right:3rem}.sm\:px-4{padding-left:1rem;padding-right:1rem}.sm\:px-5{padding-left:1.25rem;padding-right:1.25rem}.sm\:px-6{padding-left:1.5rem;padding-right:1.5rem}.sm\:pl-5{padding-left:1.25rem}.sm\:pr-4{padding-right:1rem}.sm\:text-3xl{font-size:1.875rem;line-height:2.25rem}.sm\:text-4xl{font-size:2.25rem;line-height:2.5rem}.sm\:text-base{font-size:1rem;line-height:1.5rem}.sm\:text-lg{font-size:1.125rem;line-height:1.75rem}.sm\:text-sm{font-size:0.875rem;line-height:1.25rem}}@media (min-width: 768px){.md\:-mb-14{margin-bottom:-3.5rem}.md\:w-5\/12{width:41.666667%}.md\:w-7\/12{width:58.333333%}.md\:w-80{width:20rem}.md\:grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}.md\:flex-row{flex-direction:row}.md\:justify-start{justify-content:flex-start}.md\:justify-end{justify-content:flex-end}.md\:py-14{padding-top:3.5rem;padding-bottom:3.5rem}.md\:text-left{text-align:left}}@media (min-width: 1024px){.lg\:col-span-5{grid-column:span 5 / span 5}.lg\:col-span-7{grid-column:span 7 / span 7}.lg\:flex{display:flex}.lg\:hidden{display:none}.lg\:grid-cols-12{grid-template-columns:repeat(12, minmax(0, 1fr))}.lg\:grid-cols-4{grid-template-columns:repeat(4, minmax(0, 1fr))}.lg\:grid-cols-5{grid-template-columns:repeat(5, minmax(0, 1fr))}}</style></head>
+<body class="bg-white text-slate-800 font-sans antialiased selection:bg-purple-200 selection:text-purple-900">
+
+    <!-- ==========================================
+         1. TOP UTILITY BAR (Matches Reference Image)
+         ========================================== -->
+    <div class="bg-[#fafafa] border-b border-gray-200 text-xs text-slate-600">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-9 flex items-center justify-between">
+            <!-- Left Utility Links -->
+            <div class="flex items-center space-x-3 sm:space-x-5">
+                <a href="#services" data-editable="true" class="hover:text-brand-mid transition-colors">Patient Resources</a>
+                <span class="text-gray-300">|</span>
+                <button onclick="openPortalModal('messages')" class="hover:text-brand-mid transition-colors cursor-pointer">
+                    <span data-editable="true">Messages</span>
+                </button>
+                <span class="text-gray-300">|</span>
+                <button onclick="openPortalModal('appointments')" class="hover:text-brand-mid transition-colors cursor-pointer">
+                    <span data-editable="true">Appointments</span>
+                </button>
+            </div>
+            <!-- Right Account / Billing Link -->
+            <div>
+                <button onclick="openPortalModal('account')" class="font-semibold text-slate-700 hover:text-brand-mid transition-colors flex items-center gap-1.5 cursor-pointer">
+                    <span data-editable="true">My Account &amp; Billing</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         2. MAIN NAVIGATION HEADER (Matches Reference Image)
+         ========================================== -->
+    <header class="bg-white sticky top-0 z-30 border-b border-gray-100/80 backdrop-blur-md bg-white/95">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+            <!-- Dual-Badge Brand Logo (Healthcare Heart/Cross + MI RN Badge) -->
+            <a href="#" class="flex items-center space-x-3 group">
+                <!-- Warm Heart/Cross Icon -->
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-50 to-purple-50 border border-purple-200 flex items-center justify-center shadow-sm">
+                    <svg class="w-6 h-6 brand-text-purple" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m-2-2h4"></path>
+                    </svg>
+                </div>
+                <div class="h-6 w-[1px] bg-gray-300"></div>
+                <!-- Michigan RN Box Badge + Title -->
+                <div class="flex items-center space-x-2.5">
+                    <span class="px-2 py-1 text-xs font-extrabold tracking-wider brand-text-purple border-2 brand-border-purple rounded bg-purple-50/50" data-editable="true">MI-RN</span>
+                    <div>
+                        <span class="block font-heading font-bold text-slate-900 text-base sm:text-lg leading-tight" data-editable="true">The Advocate RN</span>
+                        <span class="block text-[11px] text-slate-500 font-medium" data-editable="true">Michigan Registered Nurse</span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Right Navigation Links -->
+            <nav class="hidden lg:flex items-center space-x-6 text-sm font-semibold text-slate-700">
+                <a href="#services" class="flex items-center gap-1 hover:text-brand-mid transition-colors">
+                    <span data-editable="true">Services</span>
+                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </a>
+                <a href="#values" class="flex items-center gap-1 hover:text-brand-mid transition-colors">
+                    <span data-editable="true">Core Values &amp; Mission</span>
+                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </a>
+                <a href="#how-it-works" class="hover:text-brand-mid transition-colors" data-editable="true">How It Works</a>
+                <a href="#pricing" class="hover:text-brand-mid transition-colors" data-editable="true">Pricing &amp; Portal</a>
+                <a href="#contact" class="hover:text-brand-mid transition-colors" data-editable="true">Contact</a>
+                <div class="h-5 w-[1px] bg-gray-200"></div>
+                <button onclick="openPortalModal('appointments')" class="flex items-center gap-1.5 brand-text-purple hover:opacity-80 font-bold transition-opacity cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <span data-editable="true">Book Consult</span>
+                </button>
+            </nav>
+
+            <!-- Mobile Menu Button -->
+            <button onclick="toggleMobileMenu()" class="lg:hidden p-2 rounded-lg text-slate-600 hover:bg-gray-100" aria-label="Toggle Menu">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Mobile Menu Dropdown -->
+        <div id="mobileMenu" class="hidden lg:hidden bg-white border-b border-gray-200 px-4 pt-2 pb-4 space-y-2 text-sm font-medium">
+            <a href="#services" onclick="toggleMobileMenu()" class="block py-2 text-slate-700 hover:text-brand-mid">Services</a>
+            <a href="#values" onclick="toggleMobileMenu()" class="block py-2 text-slate-700 hover:text-brand-mid">Core Values &amp; Mission</a>
+            <a href="#how-it-works" onclick="toggleMobileMenu()" class="block py-2 text-slate-700 hover:text-brand-mid">How It Works</a>
+            <a href="#pricing" onclick="toggleMobileMenu()" class="block py-2 text-slate-700 hover:text-brand-mid">Pricing &amp; Portal</a>
+            <a href="#contact" onclick="toggleMobileMenu()" class="block py-2 text-slate-700 hover:text-brand-mid">Contact</a>
+            <button onclick="openPortalModal('appointments')" class="w-full mt-2 py-2.5 px-4 brand-bg-purple text-white rounded-lg font-semibold text-center">
+                Book a Free Discovery Call
+            </button>
+        </div>
+    </header>
+
+    <!-- ==========================================
+         3. HERO BANNER (Matches Purple Gradient & Layout)
+         ========================================== -->
+    <section class="max-w-7xl mx-auto px-0 sm:px-4">
+        <div class="hero-banner-gradient relative overflow-hidden sm:rounded-sm shadow-sm">
+            <div class="max-w-5xl mx-auto px-6 sm:px-12 pt-10 pb-20 md:py-14 flex flex-col md:flex-row items-center justify-between gap-8">
+                
+                <!-- Left Column: Centered Welcome Typography (Matches "Welcome, NICHOLAS" layout) -->
+                <div class="w-full md:w-7/12 text-center text-white z-10 py-4">
+                    <span class="inline-block px-3 py-1 mb-3 text-xs font-semibold tracking-wider uppercase bg-white/15 rounded-full text-purple-100" data-editable="true">
+                        theadvocatern.com • Michigan Registered Nurse
+                    </span>
+                    <h1 class="font-heading text-2xl sm:text-4xl font-bold tracking-tight mb-4" data-editable="true">
+                        Welcome to The Advocate RN
+                    </h1>
+                    <!-- Subtle horizontal divider line from reference image -->
+                    <div class="w-48 h-[1px] bg-white/35 mx-auto mb-4"></div>
+                    <p class="text-sm sm:text-base text-purple-50 max-w-lg mx-auto leading-relaxed font-normal" data-editable="true">
+                        Compassionate, independent Michigan RN advocacy for patients, caregivers, and families navigating complex healthcare decisions.
+                    </p>
+                    <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+                        <button onclick="openPortalModal('appointments')" class="px-5 py-2.5 bg-white text-brand-dark font-semibold text-xs sm:text-sm rounded-full shadow hover:bg-purple-50 transition-all cursor-pointer">
+                            <span data-editable="true">Schedule 15-Min Free Intro Call</span>
+                        </button>
+                        <a href="#pricing" class="px-5 py-2.5 bg-purple-900/40 border border-white/30 text-white font-medium text-xs sm:text-sm rounded-full hover:bg-purple-900/60 transition-all" data-editable="true">
+                            Client Portal &amp; Pricing
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right Column: Warm Portrait Image -->
+                <div class="w-full md:w-5/12 flex justify-center md:justify-end items-end z-10 -mb-14 md:-mb-14">
+                    <div class="relative">
+                        <img id="heroPortraitImg" src="https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&amp;fit=crop&amp;w=700&amp;q=80" onerror="this.src='https://placehold.co/480x540/4c1d95/ffffff?text=The+Advocate+RN'" alt="Warm, smiling Michigan Registered Nurse Advocate" class="w-60 sm:w-72 md:w-80 h-72 sm:h-80 object-cover object-top rounded-t-2xl shadow-2xl border-4 border-white/15">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         4. OVERLAPPING "POPULAR WAYS WE CAN HELP" CARD
+         ========================================== -->
+    <section class="max-w-5xl mx-auto px-4 sm:px-6 relative z-20 -mt-12 sm:-mt-14">
+        <div class="bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-100 p-6 sm:p-8">
+            <h2 class="text-xs sm:text-sm font-bold text-slate-800 mb-5" data-editable="true">
+                Popular ways we can help
+            </h2>
+            
+            <!-- 4-Column Quick Action Links with Dividers -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-0 sm:divide-x divide-gray-200">
+                
+                <!-- Action 1 -->
+                <a href="#services" class="flex items-center gap-3 sm:pr-4 group">
+                    <div class="w-8 h-8 rounded-lg bg-purple-50 brand-text-purple flex items-center justify-center shrink-0 group-hover:bg-brand-mid group-hover:text-white transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <span class="text-xs sm:text-sm font-bold brand-text-purple group-hover:underline leading-snug" data-editable="true">Understand Test Results &amp; Labs</span>
+                </a>
+
+                <!-- Action 2 -->
+                <a href="#services" class="flex items-center gap-3 sm:px-5 group">
+                    <div class="w-8 h-8 rounded-lg bg-purple-50 brand-text-purple flex items-center justify-center shrink-0 group-hover:bg-brand-mid group-hover:text-white transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                    </div>
+                    <span class="text-xs sm:text-sm font-bold brand-text-purple group-hover:underline leading-snug" data-editable="true">Care Coordination &amp; Post-Hospital Care</span>
+                </a>
+
+                <!-- Action 3 -->
+                <a href="#services" class="flex items-center gap-3 sm:px-5 group">
+                    <div class="w-8 h-8 rounded-lg bg-purple-50 brand-text-purple flex items-center justify-center shrink-0 group-hover:bg-brand-mid group-hover:text-white transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"></path>
+                        </svg>
+                    </div>
+                    <span class="text-xs sm:text-sm font-bold brand-text-purple group-hover:underline leading-snug" data-editable="true">Medical Billing &amp; Insurance Advocacy</span>
+                </a>
+
+                <!-- Action 4 -->
+                <a href="#services" class="flex items-center gap-3 sm:pl-5 group">
+                    <div class="w-8 h-8 rounded-lg bg-purple-50 brand-text-purple flex items-center justify-center shrink-0 group-hover:bg-brand-mid group-hover:text-white transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </div>
+                    <span class="text-xs sm:text-sm font-bold brand-text-purple group-hover:underline leading-snug" data-editable="true">Elder Care &amp; Second Opinions</span>
+                </a>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         5. 4-CARD SERVICE / HEALTH REMINDERS GRID
+         ========================================== -->
+    <section id="services" class="max-w-5xl mx-auto px-4 sm:px-6 pt-12 pb-16">
+        <!-- Section Header matching "Your health reminders | View All" -->
+        <div class="flex items-center space-x-2 mb-6">
+            <h2 class="text-sm font-semibold text-slate-700" data-editable="true">How We Support You &amp; Your Family</h2>
+            <span class="text-gray-300">|</span>
+            <a href="#pricing" class="text-xs sm:text-sm font-bold brand-text-purple hover:underline" data-editable="true">View All</a>
+        </div>
+
+        <!-- 4-Column Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            
+            <!-- Card 1: Highlighted Soft Purple Tint -->
+            <div class="bg-[#f6f3fa] border border-purple-200/80 rounded-xl p-6 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow">
+                <div>
+                    <h3 class="font-heading text-sm font-bold text-slate-800 mb-4" data-editable="true">
+                        Test Results &amp; Care Options
+                    </h3>
+                    <p class="text-xs text-slate-600 leading-relaxed mb-6" data-editable="true">
+                        Clear, plain-English explanations of lab work, imaging, and treatment options within RN scope of practice so you never feel left in the dark.
+                    </p>
+                </div>
+                <div>
+                    <button onclick="openPortalModal('appointments', 'Test Results &amp; Care Options Review')" class="text-xs font-bold brand-text-purple hover:underline cursor-pointer" data-editable="true">
+                        Learn more
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card 2: Neutral Card with Purple Icon -->
+            <div class="bg-[#fafafa] border border-gray-200/90 rounded-xl p-6 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow">
+                <div>
+                    <h3 class="font-heading text-sm font-bold text-slate-800 mb-4" data-editable="true">
+                        Post-Hospital &amp; Elder Care
+                    </h3>
+                    <div class="flex items-start gap-2.5">
+                        <svg class="w-4 h-4 brand-text-purple shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                        </svg>
+                        <p class="text-xs text-slate-600 leading-relaxed" data-editable="true">
+                            Discharge planning, medication reconciliation, senior living transitions, home care navigation, and ongoing chronic disease support.
+                        </p>
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-gray-100">
+                    <button onclick="openPortalModal('appointments', 'Post-Hospital &amp; Elder Care')" class="text-[11px] font-bold brand-text-purple hover:underline cursor-pointer" data-editable="true">Book support →</button>
+                </div>
+            </div>
+
+            <!-- Card 3: Neutral Card with Purple Icon -->
+            <div class="bg-[#fafafa] border border-gray-200/90 rounded-xl p-6 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow">
+                <div>
+                    <h3 class="font-heading text-sm font-bold text-slate-800 mb-4" data-editable="true">
+                        Medical Billing &amp; Insurance Advocacy
+                    </h3>
+                    <div class="flex items-start gap-2.5">
+                        <svg class="w-4 h-4 brand-text-purple shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <p class="text-xs text-slate-600 leading-relaxed" data-editable="true">
+                            Reviewing complex medical bills for errors, navigating insurance denials, organizing appeals, and helping you coordinate healthcare benefits.
+                        </p>
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-gray-100">
+                    <button onclick="openPortalModal('appointments', 'Medical Billing &amp; Insurance Advocacy')" class="text-[11px] font-bold brand-text-purple hover:underline cursor-pointer" data-editable="true">Get bill help →</button>
+                </div>
+            </div>
+
+            <!-- Card 4: Neutral Card with Purple Icon -->
+            <div class="bg-[#fafafa] border border-gray-200/90 rounded-xl p-6 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow">
+                <div>
+                    <h3 class="font-heading text-sm font-bold text-slate-800 mb-4" data-editable="true">
+                        Second Opinions &amp; Care Coordination
+                    </h3>
+                    <div class="flex items-start gap-2.5">
+                        <svg class="w-4 h-4 brand-text-purple shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                        </svg>
+                        <p class="text-xs text-slate-600 leading-relaxed" data-editable="true">
+                            Preparing targeted questions for specialists, coordinating records between multiple providers, and ensuring seamless communication.
+                        </p>
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-gray-100">
+                    <button onclick="openPortalModal('appointments', 'Second Opinions &amp; Care Coordination')" class="text-[11px] font-bold brand-text-purple hover:underline cursor-pointer" data-editable="true">Coordinate care →</button>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ==========================================
+         6. CORE VALUES & MISSION SECTION
+         ========================================== -->
+    <section id="values" class="bg-[#f9f8fc] border-y border-purple-100 py-16">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6">
+            
+            <!-- Mission Statement Header -->
+            <div class="text-center max-w-3xl mx-auto mb-12">
+                <span class="text-xs font-bold uppercase tracking-wider brand-text-purple" data-editable="true">
+                    Our Mission &amp; Core Values
+                </span>
+                <h2 class="font-heading text-2xl sm:text-3xl font-bold text-slate-900 mt-1 mb-4" data-editable="true">
+                    Independent Nursing Advocacy Built on Human Connection
+                </h2>
+                <p class="text-sm text-slate-600 leading-relaxed" data-editable="true">
+                    At <strong>The Advocate RN</strong>, our mission is to ensure no patient, senior, or family caregiver in Michigan ever feels rushed, unheard, or confused by the healthcare system. Because we work independently for you—not an insurance company or hospital network—every conversation is guided by our five core pillars:
+                </p>
+            </div>
+
+            <!-- 5 Core Values Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-12">
+                
+                <!-- Value 1: Transparency -->
+                <div class="bg-white rounded-xl p-5 border border-purple-100 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="w-9 h-9 rounded-lg bg-purple-50 brand-text-purple flex items-center justify-center mb-3 font-bold text-sm">01</div>
+                        <h3 class="font-heading text-sm font-bold text-slate-900 mb-2" data-editable="true">Transparency</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed" data-editable="true">
+                            Honest, plain-language explanations of your care options, test results, and upfront pricing with zero hidden fees or agendas.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Value 2: Trust & Integrity -->
+                <div class="bg-white rounded-xl p-5 border border-purple-100 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="w-9 h-9 rounded-lg bg-purple-50 brand-text-purple flex items-center justify-center mb-3 font-bold text-sm">02</div>
+                        <h3 class="font-heading text-sm font-bold text-slate-900 mb-2" data-editable="true">Trust &amp; Integrity</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed" data-editable="true">
+                            Rooted in the ethical standards of the nursing profession—protecting your privacy, autonomy, and best interests at every step.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Value 3: Respect -->
+                <div class="bg-white rounded-xl p-5 border border-purple-100 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="w-9 h-9 rounded-lg bg-purple-50 brand-text-purple flex items-center justify-center mb-3 font-bold text-sm">03</div>
+                        <h3 class="font-heading text-sm font-bold text-slate-900 mb-2" data-editable="true">Respect</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed" data-editable="true">
+                            Honoring your personal values, cultural background, and family goals so your care plan aligns with what matters most to you.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Value 4: Rapport -->
+                <div class="bg-white rounded-xl p-5 border border-purple-100 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="w-9 h-9 rounded-lg bg-purple-50 brand-text-purple flex items-center justify-center mb-3 font-bold text-sm">04</div>
+                        <h3 class="font-heading text-sm font-bold text-slate-900 mb-2" data-editable="true">Rapport</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed" data-editable="true">
+                            Creating a calm, judgment-free space where you can ask any question without ever feeling rushed by a 15-minute appointment clock.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Value 5: Relationships -->
+                <div class="bg-white rounded-xl p-5 border border-purple-100 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="w-9 h-9 rounded-lg bg-purple-50 brand-text-purple flex items-center justify-center mb-3 font-bold text-sm">05</div>
+                        <h3 class="font-heading text-sm font-bold text-slate-900 mb-2" data-editable="true">Relationships</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed" data-editable="true">
+                            Walking alongside patients, adult children, and caregivers while fostering collaborative partnerships with your medical team.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Michigan RN Scope of Practice Assurance Banner -->
+            <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-purple-200">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                    <div class="lg:col-span-5 flex items-start gap-3.5">
+                        <div class="w-11 h-11 rounded-xl brand-bg-purple text-white flex items-center justify-center shrink-0 mt-0.5">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-heading text-base font-bold text-slate-900" data-editable="true">Michigan RN Scope of Practice Assurance</h3>
+                            <p class="text-xs text-slate-600 mt-1 leading-relaxed" data-editable="true">
+                                Practiced in full accordance with the Michigan Public Health Code (Act 368) under an active Michigan Registered Nurse license.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div class="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl text-emerald-950" data-editable="true">
+                            <strong>Within RN Advocacy Scope:</strong> Health literacy education, explaining lab/imaging reports, medication reconciliation review, discharge planning, and specialist visit preparation.
+                        </div>
+                        <div class="p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-amber-950" data-editable="true">
+                            <strong>Medical Boundary:</strong> We do not diagnose medical conditions, prescribe or change medications, order lab tests, or replace your licensed physician.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ==========================================
+         7. CLIENT PORTAL, BOOKING & PRICING SECTION
+         ========================================== -->
+    <section id="how-it-works" class="max-w-5xl mx-auto px-4 sm:px-6 pt-16 pb-12">
+        <div class="text-center max-w-2xl mx-auto mb-10">
+            <span class="text-xs font-bold uppercase tracking-wider brand-text-purple" data-editable="true">How It Works • Simple &amp; HIPAA-Compliant</span>
+            <h2 class="font-heading text-2xl sm:text-3xl font-bold text-slate-900 mt-1 mb-3" data-editable="true">
+                3 Easy Steps to Start Your Advocacy Journey
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-600" data-editable="true">
+                We separate online scheduling from sensitive medical records so your personal health information remains 100% encrypted and HIPAA-protected.
+            </p>
+        </div>
+
+        <!-- 3-Step Horizontal Process -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+            <div class="bg-[#fafafa] border border-gray-200 rounded-2xl p-6 relative">
+                <span class="w-8 h-8 rounded-full brand-bg-purple text-white font-bold text-xs flex items-center justify-center mb-4">1</span>
+                <h3 class="font-heading text-sm font-bold text-slate-900 mb-2" data-editable="true">Book &amp; Pay Online</h3>
+                <p class="text-xs text-slate-600 leading-relaxed" data-editable="true">
+                    Choose a consultation package below or schedule a free 15-minute intro call. Pay securely online via Credit Card, Debit, or HSA/FSA card.
+                </p>
+            </div>
+            <div class="bg-[#fafafa] border border-gray-200 rounded-2xl p-6 relative">
+                <span class="w-8 h-8 rounded-full brand-bg-purple text-white font-bold text-xs flex items-center justify-center mb-4">2</span>
+                <h3 class="font-heading text-sm font-bold text-slate-900 mb-2" data-editable="true">Secure Intake &amp; Record Upload</h3>
+                <p class="text-xs text-slate-600 leading-relaxed" data-editable="true">
+                    Receive an automatic link to your HIPAA-compliant client portal to e-sign your RN Advocacy Agreement and safely upload lab results or discharge papers.
+                </p>
+            </div>
+            <div class="bg-[#fafafa] border border-gray-200 rounded-2xl p-6 relative">
+                <span class="w-8 h-8 rounded-full brand-bg-purple text-white font-bold text-xs flex items-center justify-center mb-4">3</span>
+                <h3 class="font-heading text-sm font-bold text-slate-900 mb-2" data-editable="true">1-on-1 RN Advocacy Session</h3>
+                <p class="text-xs text-slate-600 leading-relaxed" data-editable="true">
+                    Meet via secure video or phone (or locally in Michigan). Receive a clear action plan, plain-English explanations, and custom questions for your doctor.
+                </p>
+            </div>
+        </div>
+
+        <!-- Pricing Packages Anchor -->
+        <div id="pricing" class="pt-4">
+            <div class="text-center max-w-2xl mx-auto mb-10">
+                <span class="text-xs font-bold uppercase tracking-wider brand-text-purple" data-editable="true">Transparent Self-Pay Pricing &amp; Portal Access</span>
+                <h2 class="font-heading text-2xl sm:text-3xl font-bold text-slate-900 mt-1 mb-2" data-editable="true">
+                    Advocacy Packages &amp; Client Portal
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-600" data-editable="true">
+                    Already a client? Access your secure account anytime or select a consultation package below.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <!-- Package 1 -->
+                <div class="bg-[#fafafa] border border-gray-200 rounded-2xl p-6 flex flex-col justify-between">
+                    <div>
+                        <span class="inline-block px-2.5 py-1 text-[11px] font-semibold bg-gray-200/80 text-slate-700 rounded-md mb-3" data-editable="true">Single Session</span>
+                        <h3 class="font-heading text-lg font-bold text-slate-900" data-editable="true">Test Results &amp; Care Options Review</h3>
+                        <div class="my-4 flex items-baseline gap-1">
+                            <span class="text-3xl font-extrabold text-slate-900" data-editable="true">$125</span>
+                            <span class="text-xs text-slate-500" data-editable="true">/ 60-min session</span>
+                        </div>
+                        <p class="text-xs text-slate-600 mb-5 leading-relaxed" data-editable="true">
+                            Ideal for translating recent lab work, imaging reports, or preparing questions for an upcoming specialist or second opinion visit.
+                        </p>
+                        <ul class="space-y-2.5 text-xs text-slate-700 mb-6">
+                            <li class="flex items-center gap-2"><span class="brand-text-purple font-bold">✓</span> <span data-editable="true">Pre-session medical record review</span></li>
+                            <li class="flex items-center gap-2"><span class="brand-text-purple font-bold">✓</span> <span data-editable="true">60-min 1-on-1 video or phone consult</span></li>
+                            <li class="flex items-center gap-2"><span class="brand-text-purple font-bold">✓</span> <span data-editable="true">Written summary &amp; doctor checklist</span></li>
+                        </ul>
+                    </div>
+                    <button onclick="openPortalModal('billing', 'Test Results &amp; Care Options Review ($125)')" class="w-full py-2.5 px-4 bg-white border-2 brand-border-purple brand-text-purple hover:bg-purple-50 font-bold text-xs rounded-xl transition-colors cursor-pointer">
+                        <span data-editable="true">Book &amp; Pay Online</span>
+                    </button>
+                </div>
+
+                <!-- Package 2 (Featured) -->
+                <div class="bg-[#f6f3fa] border-2 brand-border-purple rounded-2xl p-6 flex flex-col justify-between shadow-md relative">
+                    <span class="absolute -top-3 right-5 brand-bg-purple text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full" data-editable="true">
+                        Most Popular for Families
+                    </span>
+                    <div>
+                        <span class="inline-block px-2.5 py-1 text-[11px] font-semibold bg-purple-200/70 text-brand-dark rounded-md mb-3" data-editable="true">Care Transition Bundle</span>
+                        <h3 class="font-heading text-lg font-bold text-slate-900" data-editable="true">Post-Hospital, Elder Care &amp; Billing Package</h3>
+                        <div class="my-4 flex items-baseline gap-1">
+                            <span class="text-3xl font-extrabold text-brand-dark" data-editable="true">$325</span>
+                            <span class="text-xs text-slate-600" data-editable="true">/ 2 weeks of support</span>
+                        </div>
+                        <p class="text-xs text-slate-700 mb-5 leading-relaxed" data-editable="true">
+                            Complete RN support for hospital discharges, senior care transitions, medication reconciliation, and medical bill review.
+                        </p>
+                        <ul class="space-y-2.5 text-xs text-slate-800 mb-6">
+                            <li class="flex items-center gap-2"><span class="brand-text-purple font-bold">✓</span> <span data-editable="true">Discharge &amp; medication list review</span></li>
+                            <li class="flex items-center gap-2"><span class="brand-text-purple font-bold">✓</span> <span data-editable="true">Caregiver roadmap &amp; elder care prep</span></li>
+                            <li class="flex items-center gap-2"><span class="brand-text-purple font-bold">✓</span> <span data-editable="true">Medical bill &amp; insurance EOB audit</span></li>
+                            <li class="flex items-center gap-2"><span class="brand-text-purple font-bold">✓</span> <span data-editable="true">14 days of secure portal messaging</span></li>
+                        </ul>
+                    </div>
+                    <button onclick="openPortalModal('billing', 'Post-Hospital, Elder Care &amp; Billing Package ($325)')" class="w-full py-2.5 px-4 brand-bg-purple hover:opacity-90 text-white font-bold text-xs rounded-xl shadow transition-opacity cursor-pointer">
+                        <span data-editable="true">Select Package &amp; Pay</span>
+                    </button>
+                </div>
+
+                <!-- Package 3 -->
+                <div class="bg-[#fafafa] border border-gray-200 rounded-2xl p-6 flex flex-col justify-between">
+                    <div>
+                        <span class="inline-block px-2.5 py-1 text-[11px] font-semibold bg-gray-200/80 text-slate-700 rounded-md mb-3" data-editable="true">Ongoing Retainer</span>
+                        <h3 class="font-heading text-lg font-bold text-slate-900" data-editable="true">Complex Care &amp; Family Retainer</h3>
+                        <div class="my-4 flex items-baseline gap-1">
+                            <span class="text-3xl font-extrabold text-slate-900" data-editable="true">Custom</span>
+                            <span class="text-xs text-slate-500" data-editable="true">/ tailored to your needs</span>
+                        </div>
+                        <p class="text-xs text-slate-600 mb-5 leading-relaxed" data-editable="true">
+                            Dedicated ongoing RN advocacy for new diagnoses, multi-specialist coordination, or adult children supporting aging parents in Michigan.
+                        </p>
+                        <ul class="space-y-2.5 text-xs text-slate-700 mb-6">
+                            <li class="flex items-center gap-2"><span class="brand-text-purple font-bold">✓</span> <span data-editable="true">Telehealth appointment attendance</span></li>
+                            <li class="flex items-center gap-2"><span class="brand-text-purple font-bold">✓</span> <span data-editable="true">Ongoing provider &amp; billing coordination</span></li>
+                            <li class="flex items-center gap-2"><span class="brand-text-purple font-bold">✓</span> <span data-editable="true">Weekly family caregiver update calls</span></li>
+                        </ul>
+                    </div>
+                    <button onclick="openPortalModal('appointments', 'Free 15-Minute Discovery Call')" class="w-full py-2.5 px-4 bg-white border-2 border-slate-300 text-slate-700 hover:border-brand-mid hover:text-brand-mid font-bold text-xs rounded-xl transition-colors cursor-pointer">
+                        <span data-editable="true">Schedule Free Discovery Call</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         8. CONTACT & DIRECT PORTAL ACCESS BAR
+         ========================================== -->
+    <section id="contact" class="max-w-5xl mx-auto px-4 sm:px-6 pb-16 pt-4">
+        <div class="bg-[#f6f3fa] border border-purple-200 rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="space-y-2 text-center md:text-left">
+                <span class="text-xs font-bold uppercase tracking-wider brand-text-purple" data-editable="true">Get in Touch with The Advocate RN</span>
+                <h3 class="font-heading text-xl font-bold text-slate-900" data-editable="true">Have Questions Before Booking?</h3>
+                <p class="text-xs text-slate-600 max-w-xl" data-editable="true">
+                    Reach out directly or book a complimentary 15-minute discovery call to see how a Michigan Registered Nurse advocate can support you and your loved ones.
+                </p>
+                <div class="pt-2 flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs font-semibold text-slate-800">
+                    <a id="contactEmailLink" href="mailto:care@theadvocatern.com" class="flex items-center gap-1.5 hover:underline brand-text-purple">
+                        <span>✉️</span>
+                        <span id="contactEmailDisplay" data-editable="true">care@theadvocatern.com</span>
+                    </a>
+                    <span class="text-gray-300">|</span>
+                    <a id="contactPhoneLink" href="tel:5552345678" class="flex items-center gap-1.5 hover:underline text-slate-700">
+                        <span>📞</span>
+                        <span id="contactPhoneDisplay" data-editable="true">(555) 234-5678</span>
+                    </a>
+                    <span class="text-gray-300">|</span>
+                    <span class="text-slate-600" data-editable="true">🌐 theadvocatern.com</span>
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3 shrink-0">
+                <a id="directBookingBtn" href="https://calendly.com" target="_blank" rel="noopener noreferrer" class="px-5 py-3 brand-bg-purple text-white font-bold text-xs rounded-xl shadow hover:opacity-95 text-center transition-opacity">
+                    <span data-editable="true">Book Appointment</span>
+                </a>
+                <a id="directPortalBtn" href="https://my.practicebetter.io" target="_blank" rel="noopener noreferrer" class="px-5 py-3 bg-white border-2 brand-border-purple brand-text-purple font-bold text-xs rounded-xl hover:bg-purple-50 text-center transition-colors">
+                    <span data-editable="true">Client Portal Login</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         9. MICHIGAN RN SCOPE OF PRACTICE DISCLAIMER FOOTER
+         ========================================== -->
+    <footer class="bg-slate-900 text-slate-400 text-xs py-12 border-t border-slate-800">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 pb-8 border-b border-slate-800">
+                <div>
+                    <span class="font-heading font-bold text-white text-base block mb-2" data-editable="true">The Advocate RN</span>
+                    <p class="leading-relaxed text-slate-400" data-editable="true">
+                        Compassionate, independent Michigan Registered Nurse health advocacy serving patients, caregivers, and families at <strong>theadvocatern.com</strong>.
+                    </p>
+                </div>
+                <div>
+                    <span class="font-bold text-white uppercase tracking-wider block mb-2" data-editable="true">Contact &amp; Location</span>
+                    <p class="mb-1" data-editable="true">📍 Serving All of Michigan (Virtual &amp; Local)</p>
+                    <p class="mb-1">✉️ <span id="footerEmailDisplay" data-editable="true">care@theadvocatern.com</span></p>
+                    <p>📞 <span id="footerPhoneDisplay" data-editable="true">(555) 234-5678</span> • Mon–Fri: 9am – 5pm EST</p>
+                </div>
+                <div>
+                    <span class="font-bold text-white uppercase tracking-wider block mb-2" data-editable="true">Quick Portal Links</span>
+                    <ul class="space-y-1.5">
+                        <li><button onclick="openPortalModal('account')" class="hover:text-white transition-colors cursor-pointer">My Account &amp; Client Portal</button></li>
+                        <li><button onclick="openPortalModal('billing')" class="hover:text-white transition-colors cursor-pointer">Online Billing &amp; Packages</button></li>
+                        <li><button onclick="openPortalModal('appointments')" class="hover:text-white transition-colors cursor-pointer">Schedule a Consultation</button></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Mandatory Michigan RN Legal / Medical Disclaimer -->
+            <div class="pt-6 text-[11px] text-slate-500 leading-relaxed space-y-2">
+                <p data-editable="true">
+                    <strong>MICHIGAN RN SCOPE OF PRACTICE &amp; LEGAL DISCLAIMER:</strong> The Advocate RN (`theadvocatern.com`) provides independent health advocacy, patient education, care coordination, and medical billing navigation services within the legal scope of an active Michigan Registered Nurse (RN) license (Michigan Public Health Code Act 368). Our services are educational and advocacy-based and <strong>do not constitute the practice of medicine</strong>. We do not provide medical diagnoses, prescribe or alter medications, order laboratory/diagnostic tests, or replace your primary care physician or specialist. Always consult your licensed physician regarding any medical condition. In the event of a medical emergency, call 911 immediately.
+                </p>
+                <p data-editable="true">
+                    © 2026 The Advocate RN (theadvocatern.com). All Rights Reserved.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- =========================================================================
+         CLIENT ACCOUNT, BOOKING & BILLING MODAL
+         ========================================================================= -->
+    <div id="portalModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-gray-100 overflow-hidden">
+            <!-- Modal Header -->
+            <div class="hero-banner-gradient px-6 py-4 text-white flex items-center justify-between">
+                <div>
+                    <span class="text-[10px] uppercase tracking-wider font-bold text-purple-200 block">The Advocate RN • Client Hub</span>
+                    <h3 id="modalTitle" class="font-heading font-bold text-base">My Account, Booking &amp; Billing</h3>
+                </div>
+                <button onclick="closePortalModal()" class="text-white/80 hover:text-white p-1 rounded-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 space-y-5">
+                <div id="selectedPackageBanner" class="hidden p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs text-brand-dark font-semibold"></div>
+
+                <!-- 3-Step Client Workflow -->
+                <div class="space-y-3">
+                    <div class="flex items-start gap-3 p-3 rounded-xl bg-gray-50 border border-gray-200/80">
+                        <span class="w-6 h-6 rounded-full brand-bg-purple text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
+                        <div>
+                            <h4 class="text-xs font-bold text-slate-800">Book &amp; Pay Online</h4>
+                            <p class="text-[11px] text-slate-600 mt-0.5">Choose your appointment time and pay securely via Credit Card or HSA/FSA card.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3 p-3 rounded-xl bg-gray-50 border border-gray-200/80">
+                        <span class="w-6 h-6 rounded-full brand-bg-purple text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
+                        <div>
+                            <h4 class="text-xs font-bold text-slate-800">Secure HIPAA Intake &amp; Record Upload</h4>
+                            <p class="text-[11px] text-slate-600 mt-0.5">E-sign your Michigan RN Advocacy Consent Form and upload lab results or discharge summaries inside your encrypted portal.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3 p-3 rounded-xl bg-gray-50 border border-gray-200/80">
+                        <span class="w-6 h-6 rounded-full brand-bg-purple text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
+                        <div>
+                            <h4 class="text-xs font-bold text-slate-800">1-on-1 RN Advocacy Consultation</h4>
+                            <p class="text-[11px] text-slate-600 mt-0.5">Meet with your nurse advocate by video or phone for clear answers and a personalized care roadmap.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- External Portal / Payment Action Buttons -->
+                <div class="pt-2 space-y-2.5">
+                    <a id="modalBookingBtn" href="https://calendly.com" target="_blank" rel="noopener noreferrer" class="block w-full py-3 px-4 brand-bg-purple hover:opacity-95 text-white font-bold text-xs sm:text-sm text-center rounded-xl shadow transition-opacity">
+                        Continue to Online Booking &amp; Payment →
+                    </a>
+                    <a id="modalPortalBtn" href="https://my.practicebetter.io" target="_blank" rel="noopener noreferrer" class="block w-full py-2.5 px-4 bg-white border-2 brand-border-purple brand-text-purple hover:bg-purple-50 font-bold text-xs text-center rounded-xl transition-colors">
+                        Existing Client Portal Login (Upload Records / Messages)
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         9. BUILT-IN NO-CODE LIVE VISUAL EDITOR & GITHUB EXPORT TOOL
+         (Excluded automatically when the user downloads their clean index.html!)
+         ========================================================================= -->
+    
+
+    <!-- ==========================================
+         JAVASCRIPT FOR PORTAL & NO-CODE EDITOR
+         ========================================== -->
+    <script>
+        // Toggle mobile navigation
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Open Client Account / Billing / Booking Modal
+        function openPortalModal(section, packageName) {
+            const modal = document.getElementById('portalModal');
+            const title = document.getElementById('modalTitle');
+            const banner = document.getElementById('selectedPackageBanner');
+
+            if (section === 'messages') {
+                title.textContent = 'HIPAA-Compliant Secure Messaging';
+            } else if (section === 'appointments') {
+                title.textContent = 'Schedule Your RN Advocacy Consultation';
+            } else if (section === 'billing') {
+                title.textContent = 'Online Consultation Checkout & Billing';
+            } else {
+                title.textContent = 'My Account & Client Portal';
+            }
+
+            if (packageName) {
+                banner.textContent = 'Selected Service: ' + packageName;
+                banner.classList.remove('hidden');
+            } else {
+                banner.classList.add('hidden');
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closePortalModal() {
+            document.getElementById('portalModal').classList.add('hidden');
+        }
+
+        // Toggle the No-Code Visual Editor Drawer
+        function toggleCustomizerDrawer() {
+            const drawer = document.getElementById('customizerDrawer');
+            const checkbox = document.getElementById('liveEditToggle');
+            drawer.classList.toggle('hidden');
+
+            // Automatically turn on click-to-edit when opening the drawer
+            if (!drawer.classList.contains('hidden') && !checkbox.checked) {
+                checkbox.checked = true;
+                toggleLiveTextEdit(true);
+            }
+        }
+
+        // Enable or disable direct on-page text editing
+        function toggleLiveTextEdit(enabled) {
+            const editableElements = document.querySelectorAll('[data-editable="true"]');
+            if (enabled) {
+                document.body.classList.add('live-edit-active');
+                editableElements.forEach(el => {
+                    el.setAttribute('contenteditable', 'true');
+                });
+            } else {
+                document.body.classList.remove('live-edit-active');
+                editableElements.forEach(el => {
+                    el.removeAttribute('contenteditable');
+                });
+            }
+        }
+
+        // Live update Primary Brand Color & Banner Gradient
+        function updateThemeColors() {
+            const start = document.getElementById('colorStart').value;
+            const mid = document.getElementById('colorMid').value;
+            const end = document.getElementById('colorEnd').value;
+
+            document.documentElement.style.setProperty('--hero-grad-start', start);
+            document.documentElement.style.setProperty('--hero-grad-mid', mid);
+            document.documentElement.style.setProperty('--hero-grad-end', end);
+            document.documentElement.style.setProperty('--brand-purple', mid);
+        }
+
+        // Live update Booking/Payment URL & Client Portal URL
+        function updateCustomLinks() {
+            const bookingUrl = document.getElementById('customBookingUrl').value.trim();
+            const portalUrl = document.getElementById('customPortalUrl').value.trim();
+
+            if (bookingUrl) {
+                document.getElementById('modalBookingBtn').href = bookingUrl;
+                document.getElementById('directBookingBtn').href = bookingUrl;
+            }
+            if (portalUrl) {
+                document.getElementById('modalPortalBtn').href = portalUrl;
+                document.getElementById('directPortalBtn').href = portalUrl;
+            }
+        }
+
+        // Live update Contact Email & Phone Number across the page
+        function updateContactDetails() {
+            const email = document.getElementById('customEmailInput').value.trim();
+            const phone = document.getElementById('customPhoneInput').value.trim();
+
+            if (email) {
+                document.getElementById('contactEmailDisplay').textContent = email;
+                document.getElementById('footerEmailDisplay').textContent = email;
+                document.getElementById('contactEmailLink').href = 'mailto:' + email;
+            }
+            if (phone) {
+                document.getElementById('contactPhoneDisplay').textContent = phone;
+                document.getElementById('footerPhoneDisplay').textContent = phone;
+                document.getElementById('contactPhoneLink').href = 'tel:' + phone.replace(/[^0-9+]/g, '');
+            }
+        }
+
+        // Live update Hero Portrait Image URL
+        function updateHeroImage(url) {
+            if (url && url.trim() !== '') {
+                document.getElementById('heroPortraitImg').src = url.trim();
+            }
+        }
+
+        // Preview a local photo from the user's computer
+        function previewLocalImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('heroPortraitImg').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Export a clean, production-ready index.html file (strips out the editor UI and contenteditable)
+        function downloadCleanHtmlForGithub() {
+            // Turn off contenteditable attributes before cloning
+            toggleLiveTextEdit(false);
+            document.getElementById('liveEditToggle').checked = false;
+
+            // Clone the entire document
+            const clone = document.documentElement.cloneNode(true);
+
+            // Remove the editor floating toolbar from the exported file so visitors don't see it
+            const editorUi = clone.querySelector('#builderUiContainer');
+            if (editorUi) {
+                editorUi.remove();
+            }
+
+            // Ensure modal is closed in exported HTML
+            const modal = clone.querySelector('#portalModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+
+            const htmlContent = '<!DOCTYPE html>\n' + clone.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'index.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            const statusMsg = document.getElementById('exportStatusMsg');
+            statusMsg.classList.remove('hidden');
+            setTimeout(() => statusMsg.classList.add('hidden'), 6000);
+        }
+    </script>
+
+
+</body></html>
